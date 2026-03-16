@@ -23,8 +23,8 @@ static RADIO: Mutex<OnceCell<RadioStruct>> = Mutex::new(OnceCell::uninitialized(
 /// Initialize BLE advertising.
 pub fn initialize(
     received_radio: nrf51_pac::RADIO,
-    // received_timer: nrf51_pac::TIMER0,
-    // nvic: &mut NVIC,
+    received_timer: nrf51_pac::TIMER0,
+    nvic: &mut NVIC,
 ) {
     // RADIO.modify(|radio_struct| {
     //     radio_struct.initialize(RadioStruct {
