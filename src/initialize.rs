@@ -2,7 +2,7 @@ use crate::led::Led::Yellow;
 use crate::mutex::Mutex;
 use crate::time::assembly_delay;
 use crate::uart::send_bytes;
-use crate::{barometer, battery, flash, led, motor, mpu, time, twi, uart};
+use crate::{barometer, battery, flash, led, motor, mpu, radio, time, twi, uart};
 use alloc_cortex_m::CortexMHeap;
 use core::mem::MaybeUninit;
 use nrf51_pac::Peripherals;
@@ -111,6 +111,15 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
     );
     if debug {
         let _ = send_bytes(b"MOTOR driver initialized\n");
+    }
+
+    radio::initialize(
+        nrf51_peripherals.RADIO, 
+        nrf51_peripherals.TIMER0, 
+        &mut cortex_m_peripherals.NVIC,
+    );
+    if debug {
+        let _ = send_bytes(b"RADIO driver initialized\n");
     }
 
     // done with initialization sequence
