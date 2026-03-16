@@ -72,15 +72,15 @@ pub fn initialize(
     //     nrf51_pac::NVIC::unmask(nrf51_pac::Interrupt::RADIO);
     // }
 
-    Configure timer interrupts
-    Safety: We are not using priority-based critical sections.
+    // Configure timer interrupts
+    // Safety: We are not using priority-based critical sections.
     unsafe {
         nvic.set_priority(Interrupt::TIMER0, 1);
         NVIC::unpend(Interrupt::TIMER0);
     }
 
-    Enable interrupts
-    Safety: We are not using mask-based critical sections.
+    // Enable interrupts
+    // Safety: We are not using mask-based critical sections.
     unsafe {
         NVIC::unmask(Interrupt::TIMER0);
     }
