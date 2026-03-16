@@ -26,11 +26,11 @@ pub fn initialize(
     received_timer: nrf51_pac::TIMER0,
     nvic: &mut NVIC,
 ) {
-    RADIO.modify(|radio_struct| {
-        radio_struct.initialize(RadioStruct {
-            radio: received_radio,
-            timer: received_timer
-        });
+    // RADIO.modify(|radio_struct| {
+    //     radio_struct.initialize(RadioStruct {
+    //         radio: received_radio,
+    //         timer: received_timer
+    //     });
 
         // // Disable the radio while configuring
         // radio_struct.radio.tasks_disable.write(|w| unsafe { w.bits(1) });
@@ -62,7 +62,7 @@ pub fn initialize(
         // radio_struct.timer.tasks_start.write(|w| unsafe { w.bits(1) });
         // radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
         // radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
-    });
+    // });
 
     // let scan_response: [u8; 31] = [0; 31]; // Empty scan response
 
@@ -87,10 +87,10 @@ pub fn initialize(
 }
 
 
-#[interrupt]
-unsafe fn TIMER0() {
-    // Safety: interrupts are already turned off here, since we are inside an interrupt
-    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-    radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
-    radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
-}
+// #[interrupt]
+// unsafe fn TIMER0() {
+//     // Safety: interrupts are already turned off here, since we are inside an interrupt
+//     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+//     radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
+//     radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
+// }
