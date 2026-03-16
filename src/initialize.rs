@@ -113,11 +113,11 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         let _ = send_bytes(b"MOTOR driver initialized\n");
     }
 
-    radio::initialize(
-        nrf51_peripherals.RADIO, 
-        nrf51_peripherals.TIMER0, 
-        &mut cortex_m_peripherals.NVIC,
-    );
+    // radio::initialize(
+    //     nrf51_peripherals.RADIO, 
+    //     nrf51_peripherals.TIMER0, 
+    //     &mut cortex_m_peripherals.NVIC,
+    // );
     if debug {
         let _ = send_bytes(b"RADIO driver initialized\n");
     }
