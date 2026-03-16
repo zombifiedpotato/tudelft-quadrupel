@@ -10,10 +10,12 @@ struct RadioStruct {
 
 // Advertising packet data
 static mut ADV_DATA: [u8; 31] = [
+    0x40, // PDU Type (ADV_IND)
+    0x1F, // Length of payload (31 bytes)
     0x02, 0x01, 0x06, // Flags (LE General Discoverable Mode)
     0x0B, 0x09,       // Complete Local Name (length and type)
     b'G', b'1', b'0', b'-', b'D', b'r', b'o', b'n', b'e', // "G10-Drone"
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Padding
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Padding
 ];
 
 
@@ -41,7 +43,7 @@ pub fn initialize(
         radio_struct.radio.frequency.write(|w| unsafe { w.bits(2) }); // Channel 37 (advertising channel)
         radio_struct.radio.pcnf0.write(|w| unsafe { 
             w.lflen().bits(8)
-            .s0len().clear_bit()
+            .s0len().set_bit()
             .s1len().bits(0) 
         });
         radio_struct.radio.base0.write(|w| unsafe { w.bits(0x12345678) }); // Example base address
