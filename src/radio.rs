@@ -74,23 +74,23 @@ pub fn initialize(
 
     // Configure timer interrupts
     // Safety: We are not using priority-based critical sections.
-    unsafe {
-        nvic.set_priority(Interrupt::TIMER0, 1);
-        NVIC::unpend(Interrupt::TIMER0);
-    }
+    // unsafe {
+    //     nvic.set_priority(Interrupt::TIMER0, 1);
+    //     NVIC::unpend(Interrupt::TIMER0);
+    // }
 
     // Enable interrupts
     // Safety: We are not using mask-based critical sections.
-    unsafe {
-        NVIC::unmask(Interrupt::TIMER0);
-    }
+    // unsafe {
+    //     NVIC::unmask(Interrupt::TIMER0);
+    // }
 }
 
 
-#[interrupt]
-unsafe fn TIMER0() {
-    // Safety: interrupts are already turned off here, since we are inside an interrupt
-    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-    radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
-    radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
-}
+// #[interrupt]
+// unsafe fn TIMER0() {
+//     // Safety: interrupts are already turned off here, since we are inside an interrupt
+//     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+//     radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
+//     radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
+// }
