@@ -1,4 +1,4 @@
-use nrf51_pac::{Interrupt, NVIC, interrupt};
+use nrf51_pac::{Interrupt, NVIC, interrupt, radio};
 
 use crate::{mutex::Mutex, once_cell::OnceCell};
 
@@ -9,20 +9,27 @@ struct RadioStruct {
 }
 
 // Advertising packet data
-static mut ADV_DATA: [u8; 31] = [
-    0x40, // PDU Type (ADV_IND)
-    0x1F, // Length of payload (31 bytes)
-    0x02, 0x01, 0x06, // Flags (LE General Discoverable Mode)
-    0x0B, 0x09,       // Complete Local Name (length and type)
-    b'G', b'1', b'0', b'-', b'D', b'r', b'o', b'n', b'e', // "G10-Drone"
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Padding
+static mut ADV_DATA: [u8; 37] = [
+    // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
+    0b01000011,
+    // payload length 8 bits; => LENGTH 1 byte
+    37,
+    // Payload = AdvA 6 bytes
+    0xB1, 0x3C, 0x1D, 0xA8, 0xA9, 0x7C, // Just using Random address to see if it gets found
+    // AdvData 0-31 bytes
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
 ];
 
 
 static RADIO: Mutex<OnceCell<RadioStruct>> = Mutex::new(OnceCell::uninitialized());
 
 
-/// Initialize BLE advertising.
+/// Initialize radio for advertising.
 pub fn initialize(
     received_radio: nrf51_pac::RADIO,
     received_timer: nrf51_pac::TIMER0,
@@ -35,6 +42,7 @@ pub fn initialize(
         });
 
         // Disable the radio while configuring
+        radio_struct.radio.power.write(|w| unsafe { w.bits(1) });
         radio_struct.radio.tasks_disable.write(|w| unsafe { w.bits(1) });
 
         // Configure radio for BLE 1Mbit mode
@@ -42,16 +50,29 @@ pub fn initialize(
         radio_struct.radio.txpower.write(|w| w.txpower().pos4d_bm()); // Set TX power
         radio_struct.radio.frequency.write(|w| unsafe { w.bits(2) }); // Channel 37 (advertising channel)
         radio_struct.radio.pcnf0.write(|w| unsafe { 
-            w.lflen().bits(8)
-            .s0len().set_bit()
+            w.s0len().set_bit()
+            .lflen().bits(8)
             .s1len().bits(0) 
         });
-        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x12345678) }); // Example base address
-        radio_struct.radio.prefix0.write(|w| unsafe { w.ap0().bits(0x8E).ap1().bits(0x89).ap2().bits(0xBE).ap3().bits(0xD6) });
-        radio_struct.radio.crcinit.write(|w| unsafe { w.bits(0x555555) });
-        radio_struct.radio.crcpoly.write(|w| unsafe { w.bits(0x00065B) });
+        radio_struct.radio.pcnf1.write(|w| {
+            w.whiteen().set_bit() // Enable data whitening
+        });
 
-        // Load advertising data into radio packet buffer
+        // Address config
+        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BE00) }); // Base Address // SHould be access address 0x8E89BED6
+        radio_struct.radio.prefix0.write(|w| unsafe { 
+            w.ap0().bits(0xD6)
+        });
+
+        // CRC Config
+        radio_struct.radio.crccnf.write(|w| { w.len().three().skipaddr().set_bit() }); // 3byte crc wihtout address (So only on PDU)
+        radio_struct.radio.crcpoly.write(|w| unsafe { w.bits(0b1000000000000011001011011) }); // x24 + x10 + x9 + x6 + x4 + x3 + x + 1
+        radio_struct.radio.crcinit.write(|w| unsafe { w.bits(0x555555) });
+
+        // Enable shortcuts for Ready -> Start and End -> Disable
+        // radio_struct.radio.shorts.write(|w| { w.ready_start().set_bit().end_disable().set_bit() });
+
+        // Point radio to advertising packet
         radio_struct.radio.packetptr.write(|w| unsafe { w.bits(&ADV_DATA as *const u8 as u32) });
 
         // Configure timer for advertising interval (e.g., 100ms)
@@ -96,7 +117,7 @@ unsafe fn TIMER0() {
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
         radio_struct.timer.events_compare[0].reset();
 
-         radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
-        radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
+        radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
+        radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1)});
     }
 }
