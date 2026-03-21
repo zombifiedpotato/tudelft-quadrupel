@@ -1,3 +1,4 @@
+use crate::debug_message::{debug_message_from_str, enqueue_debug_message};
 use crate::led::Led::Yellow;
 use crate::mutex::Mutex;
 use crate::time::assembly_delay;
@@ -62,10 +63,12 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
 
     uart::initialize(nrf51_peripherals.UART0, &mut cortex_m_peripherals.NVIC);
     if debug {
+        enqueue_debug_message(debug_message_from_str("UART driver initialized"));
         let _ = send_bytes(b"UART driver initialized\n");
     }
     time::initialize(nrf51_peripherals.RTC0, &mut cortex_m_peripherals.NVIC);
     if debug {
+        enqueue_debug_message(debug_message_from_str("RTC driver initialized"));
         let _ = send_bytes(b"RTC driver initialized\n");
     }
     twi::initialize(
@@ -75,18 +78,22 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         &mut cortex_m_peripherals.NVIC,
     );
     if debug {
+        enqueue_debug_message(debug_message_from_str("TWI initialized"));
         let _ = send_bytes(b"TWI initialized\n");
     }
     mpu::initialize();
     if debug {
+        enqueue_debug_message(debug_message_from_str("MPU driver initialized"));
         let _ = send_bytes(b"MPU driver initialized\n");
     }
     barometer::initialize();
     if debug {
+        enqueue_debug_message(debug_message_from_str("Barometer driver initialized"));
         let _ = send_bytes(b"Barometer driver initialized\n");
     }
     battery::initialize(nrf51_peripherals.ADC, &mut cortex_m_peripherals.NVIC);
     if debug {
+        enqueue_debug_message(debug_message_from_str("Battery driver initialized"));
         let _ = send_bytes(b"Battery driver initialized\n");
     }
     flash::initialize(
@@ -100,6 +107,7 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
     )
     .unwrap();
     if debug {
+        enqueue_debug_message(debug_message_from_str("Flash driver initialized"));
         let _ = send_bytes(b"Flash driver initialized\n");
     }
     motor::initialize(
@@ -110,6 +118,7 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         &mut nrf51_peripherals.GPIOTE,
     );
     if debug {
+        enqueue_debug_message(debug_message_from_str("MOTOR driver initialized"));
         let _ = send_bytes(b"MOTOR driver initialized\n");
     }
 
@@ -119,6 +128,7 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         &mut cortex_m_peripherals.NVIC,
     );
     if debug {
+        enqueue_debug_message(debug_message_from_str("RADIO driver initialized"));
         let _ = send_bytes(b"RADIO driver initialized\n");
     }
 

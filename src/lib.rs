@@ -41,6 +41,8 @@ pub use nrf51_pac;
 /// reexport of the `ringbuffer` crate
 pub use ringbuffer;
 
+pub mod debug_message;
+
 /// Utilities to read out the barometer
 pub mod barometer;
 
