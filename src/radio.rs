@@ -122,20 +122,20 @@ pub fn read_state() {
 
 #[interrupt]
 unsafe fn RADIO() {
-    let message_queue = get_debug_message_queue();
-    message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
+    // let message_queue = get_debug_message_queue();
+    // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
 
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.radio.events_ready.read().bits() != 0 {
-        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
         radio_struct.radio.events_ready.reset();
     }
     if radio_struct.radio.events_end.read().bits() != 0 {
-        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
         radio_struct.radio.events_end.reset();
     }
     if radio_struct.radio.events_disabled.read().bits() != 0 {
-        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
         radio_struct.radio.events_disabled.reset();
     }
 }
@@ -143,8 +143,8 @@ unsafe fn RADIO() {
 #[interrupt]
 unsafe fn TIMER0() {
     // Safety: interrupts are already turned off here, since we are inside an interrupt
-    let message_queue = get_debug_message_queue();
-    message_queue.push_back(debug_message_from_str("Timer Event (Interrupt)"));
+    // let message_queue = get_debug_message_queue();
+    // message_queue.push_back(debug_message_from_str("Timer Event (Interrupt)"));
 
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
