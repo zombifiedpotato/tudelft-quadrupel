@@ -60,10 +60,10 @@ pub fn initialize(
         });
 
         // Address config
-        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BE00) }); // Base Address // SHould be access address 0x8E89BED6
-        radio_struct.radio.prefix0.write(|w| unsafe { 
-            w.ap0().bits(0xD6)
-        });
+        // radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BE00) }); // Base Address // SHould be access address 0x8E89BED6
+        // radio_struct.radio.prefix0.write(|w| unsafe { 
+        //     w.ap0().bits(0xD6)
+        // });
 
         // CRC Config
         radio_struct.radio.crccnf.write(|w| { w.len().three().skipaddr().set_bit() }); // 3byte crc wihtout address (So only on PDU)
@@ -76,7 +76,7 @@ pub fn initialize(
         // Point radio to advertising packet
         radio_struct.radio.packetptr.write(|w| unsafe { w.bits(&ADV_DATA as *const u8 as u32) });
 
-        // Configure timer for advertising interval (e.g., 100ms)
+        // Configure timer for advertising interval (e.g., 50ms)
         radio_struct.timer.prescaler.write(|w| unsafe { w.prescaler().bits(0) });
         radio_struct.timer.cc[0].write(|w| unsafe { w.bits(16_000_000 / 50) }); // 100ms
         radio_struct.timer.intenset.write(|w| w.compare0().set_bit());
