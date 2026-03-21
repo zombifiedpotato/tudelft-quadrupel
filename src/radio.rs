@@ -1,7 +1,7 @@
 use alloc::format;
 use nrf51_pac::{Interrupt, NVIC, interrupt, radio};
 
-use crate::{debug_message::{debug_message_from_str, enqueue_debug_message}, mutex::Mutex, once_cell::OnceCell};
+use crate::{debug_message::{debug_message_from_str, enqueue_debug_message, get_debug_message_queue}, mutex::Mutex, once_cell::OnceCell};
 
 
 struct RadioStruct {
@@ -122,28 +122,30 @@ pub fn read_state() {
 
 #[interrupt]
 unsafe fn RADIO() {
-    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-    enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt)"));
+    let message_queue = get_debug_message_queue();
+    message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
 
+    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.radio.events_ready.read().bits() != 0 {
-        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): READY"));
+        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
         radio_struct.radio.events_ready.reset();
     }
     if radio_struct.radio.events_end.read().bits() != 0 {
-        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): END"));
+        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
         radio_struct.radio.events_end.reset();
     }
     if radio_struct.radio.events_disabled.read().bits() != 0 {
-        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
+        message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
         radio_struct.radio.events_disabled.reset();
     }
 }
 
-
 #[interrupt]
 unsafe fn TIMER0() {
     // Safety: interrupts are already turned off here, since we are inside an interrupt
-    enqueue_debug_message(debug_message_from_str("Timer Event (Interrupt)"));
+    let message_queue = get_debug_message_queue();
+    message_queue.push_back(debug_message_from_str("Timer Event (Interrupt)"));
+
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
         radio_struct.timer.events_compare[0].reset();

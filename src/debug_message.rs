@@ -6,6 +6,10 @@ use crate::mutex::Mutex;
 static DEBUG_QUEUE: Mutex<VecDeque<[u8; 32]>> = Mutex::new(VecDeque::new());
 
 
+pub unsafe fn get_debug_message_queue() -> &'static mut VecDeque<[u8; 32]> {
+    &mut *DEBUG_QUEUE.no_critical_section_lock_mut()
+}
+
 // Function to enqueue a debug message
 pub fn enqueue_debug_message(message: [u8; 32]) {
     DEBUG_QUEUE.modify(|queue| {
