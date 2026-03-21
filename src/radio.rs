@@ -123,6 +123,7 @@ pub fn read_state() {
 #[interrupt]
 unsafe fn RADIO() {
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+    enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt)"));
 
     if radio_struct.radio.events_ready.read().bits() != 0 {
         enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): READY"));
