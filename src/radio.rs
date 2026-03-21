@@ -88,13 +88,14 @@ pub fn initialize(
         radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
     });
 
-    let scan_response: [u8; 31] = [0; 31]; // Empty scan response
+    // let scan_response: [u8; 31] = [0; 31]; // Empty scan response
 
-    // Enable interrupts for radio events (optional)
-    // unsafe {
-    //     nvic.set_priority(nrf51_pac::Interrupt::RADIO, 1);
-    //     nrf51_pac::NVIC::unmask(nrf51_pac::Interrupt::RADIO);
-    // }
+    // Enable interrupts for radio events 
+    unsafe {
+        nvic.set_priority(Interrupt::RADIO, 1);
+        NVIC::unpend(Interrupt::RADIO);
+        NVIC::unmask(Interrupt::RADIO);
+    }
 
     // Configure timer interrupts
     // Safety: We are not using priority-based critical sections.
@@ -117,6 +118,24 @@ pub fn read_state() {
     });
     enqueue_debug_message(debug_message_from_str(format!("Radio State: 0x{:02X}", state).as_str()));
 
+}
+
+#[interrupt]
+unsafe fn RADIO() {
+    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+
+    if radio_struct.radio.events_ready.read().bits() != 0 {
+        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): READY"));
+        radio_struct.radio.events_ready.reset();
+    }
+    if radio_struct.radio.events_end.read().bits() != 0 {
+        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): END"));
+        radio_struct.radio.events_end.reset();
+    }
+    if radio_struct.radio.events_disabled.read().bits() != 0 {
+        enqueue_debug_message(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
+        radio_struct.radio.events_disabled.reset();
+    }
 }
 
 
