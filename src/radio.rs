@@ -78,7 +78,7 @@ pub fn initialize(
 
         // Configure timer for advertising interval (e.g., 100ms)
         radio_struct.timer.prescaler.write(|w| unsafe { w.prescaler().bits(0) });
-        radio_struct.timer.cc[0].write(|w| unsafe { w.bits(16_000_000 / 100) }); // 100ms
+        radio_struct.timer.cc[0].write(|w| unsafe { w.bits(16_000_000 / 50) }); // 100ms
         radio_struct.timer.intenset.write(|w| w.compare0().set_bit());
         radio_struct.timer.shorts.write(|w| w.compare0_clear().set_bit());
         radio_struct.timer.tasks_clear.write(|w| unsafe { w.bits(1) }); // Safety: Writing 1 to a task-clear register is allowed.
@@ -117,7 +117,6 @@ pub fn read_state() {
         state = radio.radio.state.read().bits();
     });
     enqueue_debug_message(debug_message_from_str(format!("Radio State: {}", state).as_str()));
-
 }
 
 #[interrupt]
