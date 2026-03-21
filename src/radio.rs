@@ -11,12 +11,16 @@ struct RadioStruct {
 
 // Advertising packet data
 static mut ADV_DATA: [u8; 37] = [
+    // START PDU HEADER
     // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
-    0b01000011,
+    0b01000010,
     // payload length 8 bits; => LENGTH 1 byte
-    37,
+     37,
+    // END PDU HEADER
+
+    // START PDU BODY
     // Payload = AdvA 6 bytes
-    0xB1, 0x3C, 0x1D, 0xA8, 0xA9, 0x7C, // Just using Random address to see if it gets found
+    0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC6, // Just using Random address to see if it gets found
     // AdvData 0-31 bytes
     0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00,
@@ -24,6 +28,7 @@ static mut ADV_DATA: [u8; 37] = [
     0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00
+    // END PDU BODY
 ];
 
 
@@ -60,10 +65,10 @@ pub fn initialize(
         });
 
         // Address config
-        // radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BE00) }); // Base Address // SHould be access address 0x8E89BED6
-        // radio_struct.radio.prefix0.write(|w| unsafe { 
-        //     w.ap0().bits(0xD6)
-        // });
+        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BED6) }); // Base Address // SHould be access address 0x8E89BED6
+        radio_struct.radio.prefix0.write(|w| unsafe { 
+            w.ap0().bits(0xD6)
+        });
 
         // CRC Config
         radio_struct.radio.crccnf.write(|w| { w.len().three().skipaddr().set_bit() }); // 3byte crc wihtout address (So only on PDU)
@@ -91,11 +96,11 @@ pub fn initialize(
     // let scan_response: [u8; 31] = [0; 31]; // Empty scan response
 
     // Enable interrupts for radio events 
-    unsafe {
-        nvic.set_priority(Interrupt::RADIO, 1);
-        NVIC::unpend(Interrupt::RADIO);
-        NVIC::unmask(Interrupt::RADIO);
-    }
+    // unsafe {
+    //     nvic.set_priority(Interrupt::RADIO, 1);
+    //     NVIC::unpend(Interrupt::RADIO);
+    //     NVIC::unmask(Interrupt::RADIO);
+    // }
 
     // Configure timer interrupts
     // Safety: We are not using priority-based critical sections.
@@ -119,26 +124,26 @@ pub fn read_state() {
     enqueue_debug_message(debug_message_from_str(format!("Radio State: {}", state).as_str()));
 }
 
-#[interrupt]
-unsafe fn RADIO() {
-    // I dont fire for some reason stupid chip
-    // let message_queue = get_debug_message_queue();
-    // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
+// #[interrupt]
+// unsafe fn RADIO() {
+//     // I dont fire for some reason stupid chip
+//     // let message_queue = get_debug_message_queue();
+//     // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
 
-    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-    if radio_struct.radio.events_ready.read().bits() != 0 {
-        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
-        radio_struct.radio.events_ready.reset();
-    }
-    if radio_struct.radio.events_end.read().bits() != 0 {
-        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
-        radio_struct.radio.events_end.reset();
-    }
-    if radio_struct.radio.events_disabled.read().bits() != 0 {
-        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
-        radio_struct.radio.events_disabled.reset();
-    }
-}
+//     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+//     if radio_struct.radio.events_ready.read().bits() != 0 {
+//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
+//         radio_struct.radio.events_ready.reset();
+//     }
+//     if radio_struct.radio.events_end.read().bits() != 0 {
+//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
+//         radio_struct.radio.events_end.reset();
+//     }
+//     if radio_struct.radio.events_disabled.read().bits() != 0 {
+//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
+//         radio_struct.radio.events_disabled.reset();
+//     }
+// }
 
 #[interrupt]
 unsafe fn TIMER0() {
