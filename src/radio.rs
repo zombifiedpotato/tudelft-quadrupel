@@ -110,13 +110,20 @@ pub fn initialize(
     }
 }
 
+pub fn read_state() {
+    let mut state = 0;
+    RADIO.modify(|radio| {
+        state = radio.radio.state.read().bits();
+    });
+    enqueue_debug_message(debug_message_from_str(format!("Radio State: 0x{:02X}", state).as_str()));
+
+}
+
 
 #[interrupt]
 unsafe fn TIMER0() {
     // Safety: interrupts are already turned off here, since we are inside an interrupt
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-    let state = radio_struct.radio.state.read().bits();
-    enqueue_debug_message(debug_message_from_str(format!("Radio State: 0x{:02X}", state).as_str()));
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
         radio_struct.timer.events_compare[0].reset();
 
