@@ -143,8 +143,8 @@ unsafe fn RADIO() {
 #[interrupt]
 unsafe fn TIMER0() {
     // Safety: interrupts are already turned off here, since we are inside an interrupt
-    // let message_queue = get_debug_message_queue();
-    // message_queue.push_back(debug_message_from_str("Timer Event (Interrupt)"));
+    let message_queue = get_debug_message_queue();
+    message_queue.push_back(debug_message_from_str("Timer Event (Interrupt)"));
 
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
