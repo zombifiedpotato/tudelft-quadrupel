@@ -1,6 +1,7 @@
+use alloc::format;
 use nrf51_pac::{Interrupt, NVIC, interrupt, radio};
 
-use crate::{mutex::Mutex, once_cell::OnceCell};
+use crate::{debug_message::{debug_message_from_str, enqueue_debug_message}, mutex::Mutex, once_cell::OnceCell};
 
 
 struct RadioStruct {
@@ -114,6 +115,8 @@ pub fn initialize(
 unsafe fn TIMER0() {
     // Safety: interrupts are already turned off here, since we are inside an interrupt
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+    let state = radio_struct.radio.state.read().bits();
+    enqueue_debug_message(debug_message_from_str(format!("Radio State: 0x{:02X}", state).as_str()));
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
         radio_struct.timer.events_compare[0].reset();
 
