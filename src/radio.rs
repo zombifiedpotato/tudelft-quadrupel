@@ -116,7 +116,7 @@ pub fn read_state() {
     RADIO.modify(|radio| {
         state = radio.radio.state.read().bits();
     });
-    enqueue_debug_message(debug_message_from_str(format!("Radio State: 0x{:02X}", state).as_str()));
+    enqueue_debug_message(debug_message_from_str(format!("Radio State: {}", state).as_str()));
 
 }
 
