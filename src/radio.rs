@@ -15,12 +15,12 @@ static mut ADV_DATA: [u8; 11] = [
     // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
     0b01000010,
     // payload length 8 bits; => LENGTH 1 byte
-     0b10010000,
+     0b00001001,
     // END PDU HEADER
 
     // START PDU BODY
     // Payload = AdvA 6 bytes
-    0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC6, // Just using Random address to see if it gets found
+    0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC3, // Random static address (ending at 11)
     // AdvData 0-31 bytes
      0x01, 0x02, 0x03, //0x00, 0x00,
     // 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -65,7 +65,7 @@ pub fn initialize(
         });
 
         // Address config
-        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BED6) }); // Base Address // SHould be access address 0x8E89BED6
+        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BED6) }); // Base Address // Should be access address 0x8E89BED6
         radio_struct.radio.prefix0.write(|w| unsafe { 
             w.ap0().bits(0xD6)
         });
