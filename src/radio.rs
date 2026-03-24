@@ -60,12 +60,13 @@ pub fn initialize(
             .lflen().bits(8)
             .s1len().bits(0) 
         });
-        radio_struct.radio.pcnf1.write(|w| {
+        radio_struct.radio.pcnf1.write(|w| unsafe {
             w.whiteen().set_bit() // Enable data whitening
+            .balen().bits(3)
         });
 
         // Address config
-        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x8E89BED6) }); // Base Address // Should be access address 0x8E89BED6
+        radio_struct.radio.base0.write(|w| unsafe { w.bits(0x008E89BE) }); // Base Address // Should be access address 0x8E89BED6
         radio_struct.radio.prefix0.write(|w| unsafe { 
             w.ap0().bits(0xD6)
         });
