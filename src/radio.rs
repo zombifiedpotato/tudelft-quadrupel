@@ -69,6 +69,7 @@ pub fn initialize(
         radio_struct.radio.prefix0.write(|w| unsafe { 
             w.ap0().bits(0xD6)
         });
+        radio_struct.radio.txaddress.write(|w| unsafe { w.bits(0) }); // Logical address 0 which is base address 0 and prefix 0
 
         // CRC Config
         radio_struct.radio.crccnf.write(|w| { w.len().three().skipaddr().set_bit() }); // 3byte crc wihtout address (So only on PDU)
