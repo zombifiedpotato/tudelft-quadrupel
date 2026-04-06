@@ -116,9 +116,9 @@ pub fn initialize(
         nvic.set_priority(Interrupt::TIMER0, 1);
         NVIC::unpend(Interrupt::TIMER0);
         NVIC::unmask(Interrupt::TIMER0);
-        // nvic.set_priority(Interrupt::RADIO, 1);
-        // NVIC::unpend(Interrupt::RADIO);
-        // NVIC::unmask(Interrupt::RADIO);
+        nvic.set_priority(Interrupt::RADIO, 1);
+        NVIC::unpend(Interrupt::RADIO);
+        NVIC::unmask(Interrupt::RADIO);
     }
 }
 
