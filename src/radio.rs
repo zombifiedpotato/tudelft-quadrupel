@@ -244,8 +244,8 @@ unsafe fn TIMER0() {
     if radio_struct.timer.events_compare[0].read().bits() != 0 {
         radio_struct.timer.events_compare[0].reset();
 
-        if radio_struct.radio.state.read().bits() == 0 { // If radio is disabled, safe to write to shared DMA space
-            COPY_PCKT = PCKT_DATA;
+        if radio_struct.radio.state.read().bits() == 0 { // If radio is disabled, safe to use shared DMA space
+            COPY_PCKT = PCKT_DATA.clone();
             PCKT_DATA = [radio_struct.counter, 0x00];
             radio_struct.counter = radio_struct.counter + 1;
         }
