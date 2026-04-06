@@ -130,26 +130,26 @@ pub fn read_state() {
     enqueue_debug_message(debug_message_from_str(format!("Radio State: {}", state).as_str()));
 }
 
-// #[interrupt]
-// unsafe fn RADIO() {
-//     // I dont fire for some reason stupid chip
-//     // let message_queue = get_debug_message_queue();
-//     // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
+#[interrupt]
+unsafe fn RADIO() {
+    // I dont fire for some reason stupid chip
+    let message_queue = get_debug_message_queue();
+    message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
 
-//     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
-//     if radio_struct.radio.events_ready.read().bits() != 0 {
-//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
-//         radio_struct.radio.events_ready.reset();
-//     }
-//     if radio_struct.radio.events_end.read().bits() != 0 {
-//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
-//         radio_struct.radio.events_end.reset();
-//     }
-//     if radio_struct.radio.events_disabled.read().bits() != 0 {
-//         // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
-//         radio_struct.radio.events_disabled.reset();
-//     }
-// }
+    let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
+    if radio_struct.radio.events_ready.read().bits() != 0 {
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): READY"));
+        radio_struct.radio.events_ready.reset();
+    }
+    if radio_struct.radio.events_end.read().bits() != 0 {
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): END"));
+        radio_struct.radio.events_end.reset();
+    }
+    if radio_struct.radio.events_disabled.read().bits() != 0 {
+        // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt): DISABLED"));
+        radio_struct.radio.events_disabled.reset();
+    }
+}
 
 #[interrupt]
 unsafe fn TIMER0() {
