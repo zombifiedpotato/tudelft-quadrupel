@@ -121,10 +121,11 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         enqueue_debug_message(debug_message_from_str("MOTOR driver initialized"));
         let _ = send_bytes(b"MOTOR driver initialized\n");
     }
-
+    
     radio::initialize(
         nrf51_peripherals.RADIO, 
         nrf51_peripherals.TIMER0, 
+        nrf51_peripherals.FICR,
         &mut cortex_m_peripherals.NVIC,
     );
     if debug {

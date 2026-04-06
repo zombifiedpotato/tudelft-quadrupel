@@ -39,6 +39,7 @@ static RADIO: Mutex<OnceCell<RadioStruct>> = Mutex::new(OnceCell::uninitialized(
 pub fn initialize(
     received_radio: nrf51_pac::RADIO,
     received_timer: nrf51_pac::TIMER0,
+    received_ficr: nrf51_pac::FICR,
     nvic: &mut NVIC,
 ) {
     RADIO.modify(|radio_struct| {
@@ -50,6 +51,13 @@ pub fn initialize(
         // Disable the radio while configuring
         radio_struct.radio.power.write(|w| unsafe { w.bits(1) });
         radio_struct.radio.tasks_disable.write(|w| unsafe { w.bits(1) });
+
+        radio_struct.radio.override0.write(|w| unsafe { w.bits(received_ficr.ble_1mbit[0].read().bits())});
+        radio_struct.radio.override1.write(|w| unsafe { w.bits(received_ficr.ble_1mbit[1].read().bits())});
+        radio_struct.radio.override2.write(|w| unsafe { w.bits(received_ficr.ble_1mbit[2].read().bits())});
+        radio_struct.radio.override3.write(|w| unsafe { w.bits(received_ficr.ble_1mbit[3].read().bits())});
+        radio_struct.radio.override4.write(|w| unsafe { w.bits(received_ficr.ble_1mbit[4].read().bits())});
+
 
         // Configure radio for BLE 1Mbit mode
         radio_struct.radio.mode.write(|w| w.mode().ble_1mbit());
