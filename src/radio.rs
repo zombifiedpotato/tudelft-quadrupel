@@ -133,8 +133,8 @@ pub fn read_state() {
 #[interrupt]
 unsafe fn RADIO() {
     // I dont fire for some reason stupid chip
-    let message_queue = get_debug_message_queue();
-    message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
+    // let message_queue = get_debug_message_queue();
+    // message_queue.push_back(debug_message_from_str("Radio Event (Interrupt)"));
 
     let radio_struct = unsafe { RADIO.no_critical_section_lock_mut() };
     if radio_struct.radio.events_ready.read().bits() != 0 {
