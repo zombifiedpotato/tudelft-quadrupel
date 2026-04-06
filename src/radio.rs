@@ -9,27 +9,27 @@ struct RadioStruct {
     timer: nrf51_pac::TIMER0
 }
 
-// Advertising packet data
-static mut ADV_DATA: [u8; 11] = [
-    // START PDU HEADER
-    // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
-    0b01000010,
-    // payload length 8 bits; => LENGTH 1 byte
-     0b00001001,
-    // END PDU HEADER
+// // Advertising packet data
+// static mut ADV_DATA: [u8; 11] = [
+//     // START PDU HEADER
+//     // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
+//     0b01000010,
+//     // payload length 8 bits; => LENGTH 1 byte
+//      0b00001001,
+//     // END PDU HEADER
 
-    // START PDU BODY
-    // Payload = AdvA 6 bytes
-    0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC3, // Random static address (ending at 11)
-    // AdvData 0-31 bytes
-     0x02, 0x02, 0x03, //0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00
-    // END PDU BODY
-];
+//     // START PDU BODY
+//     // Payload = AdvA 6 bytes
+//     0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC3, // Random static address (ending at 11)
+//     // AdvData 0-31 bytes
+//      0x02, 0x02, 0x03, //0x00, 0x00,
+//     // 0x00, 0x00, 0x00, 0x00, 0x00,
+//     // 0x00, 0x00, 0x00, 0x00, 0x00,
+//     // 0x00, 0x00, 0x00, 0x00, 0x00,
+//     // 0x00, 0x00, 0x00, 0x00, 0x00,
+//     // 0x00, 0x00, 0x00, 0x00
+//     // END PDU BODY
+// ];
 
 
 static RADIO: Mutex<OnceCell<RadioStruct>> = Mutex::new(OnceCell::uninitialized());
@@ -82,47 +82,43 @@ pub fn initialize(
 
         // CRC Config
         radio_struct.radio.crccnf.write(|w| { w.len().three().skipaddr().set_bit() }); // 3byte crc wihtout address (So only on PDU)
-        radio_struct.radio.crcpoly.write(|w| unsafe { w.bits(0b1000000000000011001011011) }); // x24 + x10 + x9 + x6 + x4 + x3 + x + 1
+        // radio_struct.radio.crcpoly.write(|w| unsafe { w.bits(0b1000000000000011001011011) }); // x24 + x10 + x9 + x6 + x4 + x3 + x + 1
+        radio_struct.radio.crcpoly.write(|w| unsafe { w.bits(0x00065B) }); // AI CODE
         radio_struct.radio.crcinit.write(|w| unsafe { w.bits(0x555555) });
 
         // Enable shortcuts for Ready -> Start and End -> Disable
-        // radio_struct.radio.shorts.write(|w| { w.ready_start().set_bit().end_disable().set_bit() });
+        radio_struct.radio.shorts.write(|w| { w.ready_start().set_bit().end_disable().set_bit() });
 
         // Point radio to advertising packet
+        static mut ADV_DATA: [u8; 11] = [
+            0x00, // PDU type: ADV_IND
+            0x09, // Payload length: 9 bytes (6 AdvA + 3 AdvData)
+            0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC3, // Random static address
+            0x02, 0x02, 0x03, // AdvData
+        ];
         radio_struct.radio.packetptr.write(|w| unsafe { w.bits(&ADV_DATA as *const u8 as u32) });
 
         // Configure timer for advertising interval (e.g., 50ms)
         radio_struct.timer.prescaler.write(|w| unsafe { w.prescaler().bits(0) });
-        radio_struct.timer.cc[0].write(|w| unsafe { w.bits(16_000_000 / 50) }); // 100ms
+        radio_struct.timer.cc[0].write(|w| unsafe { w.bits(16_000_000 / 2) }); // 500ms
         radio_struct.timer.intenset.write(|w| w.compare0().set_bit());
         radio_struct.timer.shorts.write(|w| w.compare0_clear().set_bit());
         radio_struct.timer.tasks_clear.write(|w| unsafe { w.bits(1) }); // Safety: Writing 1 to a task-clear register is allowed.
-
         radio_struct.timer.tasks_start.write(|w| unsafe { w.bits(1) });
+
         radio_struct.radio.tasks_txen.write(|w| unsafe { w.bits(1) });
         radio_struct.radio.tasks_start.write(|w| unsafe { w.bits(1) });
     });
-
-    // let scan_response: [u8; 31] = [0; 31]; // Empty scan response
-
-    // Enable interrupts for radio events 
-    // unsafe {
-    //     nvic.set_priority(Interrupt::RADIO, 1);
-    //     NVIC::unpend(Interrupt::RADIO);
-    //     NVIC::unmask(Interrupt::RADIO);
-    // }
 
     // Configure timer interrupts
     // Safety: We are not using priority-based critical sections.
     unsafe {
         nvic.set_priority(Interrupt::TIMER0, 1);
         NVIC::unpend(Interrupt::TIMER0);
-    }
-
-    // Enable interrupts
-    // Safety: We are not using mask-based critical sections.
-    unsafe {
         NVIC::unmask(Interrupt::TIMER0);
+        // nvic.set_priority(Interrupt::RADIO, 1);
+        // NVIC::unpend(Interrupt::RADIO);
+        // NVIC::unmask(Interrupt::RADIO);
     }
 }
 
