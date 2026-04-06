@@ -31,7 +31,7 @@ static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 ///
 /// # Safety
 /// safe is heap_memory is a valid pointer to memory
-pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
+pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool, is_sender: bool) {
     // Allow time for PC to start up. The drone board starts running code immediately after upload,
     // but at that time the PC may not be listening on UART etc.
     assembly_delay(2_500_000);
@@ -121,12 +121,20 @@ pub unsafe fn initialize(heap_memory: *const [MaybeUninit<u8>], debug: bool) {
         enqueue_debug_message(debug_message_from_str("MOTOR driver initialized"));
         let _ = send_bytes(b"MOTOR driver initialized\n");
     }
-
-    radio::initialize(
-        nrf51_peripherals.RADIO, 
-        nrf51_peripherals.TIMER0, 
-        &mut cortex_m_peripherals.NVIC,
-    );
+    if is_sender {
+        radio::initialize_send(
+            nrf51_peripherals.RADIO, 
+            nrf51_peripherals.TIMER0, 
+            &mut cortex_m_peripherals.NVIC,
+        );
+    } else {
+        radio::initialize_read(
+            nrf51_peripherals.RADIO, 
+            nrf51_peripherals.TIMER0, 
+            &mut cortex_m_peripherals.NVIC,
+        );
+    }
+   
     if debug {
         enqueue_debug_message(debug_message_from_str("RADIO driver initialized"));
         let _ = send_bytes(b"RADIO driver initialized\n");
