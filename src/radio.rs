@@ -9,33 +9,23 @@ struct RadioStruct {
     timer: nrf51_pac::TIMER0
 }
 
-// Advertising packet data
-static mut ADV_DATA: [u8; 11] = [
-    // START PDU HEADER
-    // PDU Type 4 bits; RFU 1 bit; ChSel 1 bit; TxAdd 1 bit; RxAdd 1 bit; => s0 1 byte
-    0b01000010,
-    // payload length 8 bits; => LENGTH 1 byte
-     0b00001001,
-    // END PDU HEADER
-
-    // START PDU BODY
-    // Payload = AdvA 6 bytes
-    0xA1, 0xB2, 0xC3, 0xA4, 0xB5, 0xC3, // Random static address (ending at 11)
-    // AdvData 0-31 bytes
-     0x02, 0x02, 0x03, //0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00, 0x00,
-    // 0x00, 0x00, 0x00, 0x00
-    // END PDU BODY
+// Static memory lo for radio DMA
+static mut ADV_DATA: [u8; 37] = [
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00
 ];
 
 
 static RADIO: Mutex<OnceCell<RadioStruct>> = Mutex::new(OnceCell::uninitialized());
 
 
-/// Initialize radio for advertising.
+/// Initialize radio
 pub fn initialize(
     received_radio: nrf51_pac::RADIO,
     received_timer: nrf51_pac::TIMER0,
@@ -51,13 +41,13 @@ pub fn initialize(
         radio_struct.radio.power.write(|w| unsafe { w.bits(1) });
         radio_struct.radio.tasks_disable.write(|w| unsafe { w.bits(1) });
 
-        // Configure radio for BLE 1Mbit mode
-        radio_struct.radio.mode.write(|w| w.mode().ble_1mbit());
+        // Configure radio for nrf 1Mbit mode
+        radio_struct.radio.mode.write(|w| w.mode().nrf_1mbit());
         radio_struct.radio.txpower.write(|w| w.txpower().pos4d_bm()); // Set TX power
         radio_struct.radio.frequency.write(|w| unsafe { w.bits(2) }); // Channel 37 (advertising channel)
         radio_struct.radio.pcnf0.write(|w| unsafe { 
-            w.s0len().set_bit()
-            .lflen().bits(8)
+            w.s0len().clear_bit()
+            .lflen().bits(0)
             .s1len().bits(0) 
         });
         radio_struct.radio.pcnf1.write(|w| unsafe {
